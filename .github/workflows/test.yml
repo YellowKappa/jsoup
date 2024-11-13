@@ -36,9 +36,13 @@ jobs:
           echo "Running with JVM flag: ${{ matrix.jvm_flag }}"
 
       - name: Maven Compile
+        env:
+          MAVEN_OPTS: ${{ matrix.jvm_flag }}
         run: mvn -X compile -B --file pom.xml
 
       - name: Maven Verify
+        env:
+          MAVEN_OPTS: ${{ matrix.jvm_flag }}
         run: mvn -X verify -B --file pom.xml
 
       - name: Get JaCoCo Coverage
