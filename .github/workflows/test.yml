@@ -11,8 +11,15 @@ jobs:
         os: [ubuntu-latest]
         # choosing to run a reduced set of LTS, current, and next, to balance coverage and execution time
         java: [17]
+        jvm_flags: [
+          "-XX:+UseG1GC",
+          "-XX:+UseStringDeduplication",
+          "-Xms512m",
+          "-XX:+UnlockDiagnosticVMOptions",
+          "-XX:+UseAdaptiveSizePolicy"
+        ]
       fail-fast: false
-    name: Test JDK ${{ matrix.java }}, ${{ matrix.os }}
+    name: Test JDK ${{ matrix.java }}, ${{ matrix.os }}, ${{ matrix.jvm_flag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,6 +30,10 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: 'zulu'
           cache: 'maven'
+
+      - name: Log JVM Flag
+        run: |
+          echo "Running with JVM flag: ${{ matrix.jvm_flag }}"
 
       - name: Maven Compile
         run: mvn -X compile -B --file pom.xml
