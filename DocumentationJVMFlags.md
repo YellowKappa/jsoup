@@ -1,5 +1,6 @@
 # Documentation Tâche 3
 ## Simon Thivierge 20248484
+J'ai eu un silence radio de mon binôme :(
 
 ## 1. -XX:+UseG1GC
 ### Type:
@@ -50,5 +51,5 @@ Grâce à la politique de taille adaptative, la JVM peut optimiser l'allocation 
 Pour Jsoup, cet indicateur permet de garantir une utilisation efficace de la mémoire lors de charges de travail variables, telles que l'analyse de documents HTML de petite et de grande taille de manière interchangeable.
 
 ## 6. Explication humour
-Je voulais prendre le Flag -XX:+UseConcMarkSweepGC pour tester les application avec des objets "short-lived"
+Je voulais prendre le Flag -XX:+UseConcMarkSweepGC pour tester les applications avec des objets "short-lived"
 mais il est discontinué dans les versions java plus récentes.
