@@ -1,0 +1,55 @@
+name: JVM Flags Testing with Coverage
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        java: [8, 17, 21]
+        jvm_flag:
+          - "-Xmx512m"
+          - "-Xms256m"
+          - "-XX:+UseG1GC"
+          - "-XX:+UseParallelGC"
+          - "-XX:+UseConcMarkSweepGC"
+      fail-fast: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Java ${{ matrix.java }}
+        uses: actions/setup-java@v2
+        with:
+          java-version: ${{ matrix.java }}
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: maven-${{ matrix.java }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            maven-${{ matrix.java }}-
+
+      - name: Set JVM Flag
+        run: echo "JAVA_TOOL_OPTIONS=${{ matrix.jvm_flag }}" >> $GITHUB_ENV
+
+      - name: Build and run tests
+        run: mvn clean test
+
+      - name: Generate code coverage report
+        run: |
+          mvn jacoco:report
+        continue-on-error: true
+
+      - name: Upload Jacoco Coverage Results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: jacoco-coverage-${{ matrix.java }}-${{ matrix.jvm_flag }}
+          path: target/site/jacoco/jacoco.csv
