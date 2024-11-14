@@ -32,6 +32,12 @@ jobs:
           distribution: 'zulu'
           cache: 'maven'
 
+      - name: Sanitize JVM Flag for Path
+        id: sanitize
+        run: |
+          sanitized_flag="${{ matrix.jvm_flag//[:+]/_ }}"
+          echo "sanitized_flag=${sanitized_flag}" >> $GITHUB_ENV
+
       - name: Log JVM Flag
         run: | 
           echo "Running with JVM flag: ${{ matrix.jvm_flag }}"
