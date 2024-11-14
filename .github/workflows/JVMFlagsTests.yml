@@ -15,7 +15,7 @@ jobs:
           - "-Xms256m"
           - "-XX:+UseG1GC"
           - "-XX:+UseParallelGC"
-          - "-XX:+UseConcMarkSweepGC"
+          - "-XX:+PrintCompilation"
       fail-fast: false
 
     name: Test on JDK ${{ matrix.java }} with JVM Flag ${{ matrix.jvm_flag }}
