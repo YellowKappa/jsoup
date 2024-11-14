@@ -9,16 +9,10 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
+        # choosing to run a reduced set of LTS, current, and next, to balance coverage and execution time
         java: [17]
-        jvm_flags: [
-          "-XX:+UseG1GC",
-          "-XX:+UseStringDeduplication",
-          "-Xms512m",
-          "-XX:+UnlockDiagnosticVMOptions",
-          "-XX:+UseAdaptiveSizePolicy"
-        ]
       fail-fast: false
-    name: Test JDK ${{ matrix.java }}, ${{ matrix.os }}, ${{ matrix.jvm_flag }}
+    name: Test JDK ${{ matrix.java }}, ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,37 +24,25 @@ jobs:
           distribution: 'zulu'
           cache: 'maven'
 
-      - name: Log JVM Flag
-        run: |
-          echo "Running with JVM flag: ${{ matrix.jvm_flag }}"
-
       - name: Maven Compile
-        env:
-          MAVEN_OPTS: ${{ matrix.jvm_flag }}
         run: mvn -X compile -B --file pom.xml
 
       - name: Maven Verify
-        env:
-          MAVEN_OPTS: ${{ matrix.jvm_flag }}
         run: mvn -X verify -B --file pom.xml
 
-      - name: Generate JaCoCo Coverage Report
-        run: mvn jacoco:report --file pom.xml
-
-      - name: Get JaCoCo Coverage for Flag ${{ matrix.jvm_flag }}
+      - name: Get JaCoCo Coverage
         id: coverage
         run: |
-          # Assuming coverage.py reads and extracts the relevant data from the JaCoCo CSV output
           coverage=$(python3 config/coverage.py target/site/jacoco/jacoco.csv) 
-          echo "COVERAGE=${{ matrix.jvm_flag }}=$coverage" >> $GITHUB_ENV
-          echo "Coverage for flag ${{ matrix.jvm_flag }}: $coverage%"
+          echo "COVERAGE=$coverage" >> $GITHUB_ENV
 
-      - name: Fail if coverage has not improved
+      - name: Fail if coverage has not improved.
         run: |
+          coverage=$COVERAGE
           threshold=90.41
-          current_coverage=$(echo "${{ env.COVERAGE }}" | grep "${{ matrix.jvm_flag }}" | cut -d '=' -f 2)
-          if (( $(echo "$current_coverage - $threshold <= 0.1" | bc -l) )); then
-            echo "Coverage has not improved for flag ${{ matrix.jvm_flag }}."
+          if (( $(echo "$coverage - $threshold <= 0.1" | bc -l) )); then
+            echo "Coverage has not improved."
             exit 1
           else
-            echo "New coverage for flag ${{ matrix.jvm_flag }}: $current_coverage%"
+            echo "New coverage: $coverage%"
+          fi
