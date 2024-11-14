@@ -10,12 +10,13 @@ jobs:
     strategy:
       matrix:
         java: [8, 17, 21]
-        jvm_flag:
-          - "-Xmx512m"
-          - "-Xms256m"
-          - "-XX:+UseG1GC"
-          - "-XX:+UseParallelGC"
-          - "-XX:+PrintCompilation"
+        jvm_flag: [
+        "-XX:+UseG1GC",
+        "-XX:+UseStringDeduplication",
+        "-Xms512m",
+        "-XX:+UnlockDiagnosticVMOptions",
+        "-XX:+UseAdaptiveSizePolicy"
+        ]
       fail-fast: false
 
     name: Test on JDK ${{ matrix.java }} with JVM Flag ${{ matrix.jvm_flag }}
