@@ -38,7 +38,7 @@ jobs:
           echo "SANITIZED_FLAG=$sanitized_flag" >> $GITHUB_ENV
 
       - name: Log JVM Flag
-        run:
+        run: |
           echo "Testing with JVM flag: ${{ matrix.jvm_flag }}"
 
       - name: Maven Build with JVM Flag
