@@ -7,49 +7,54 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         java: [8, 17, 21]
-        jvm_flag:
-          - "-Xmx512m"
-          - "-Xms256m"
-          - "-XX:+UseG1GC"
-          - "-XX:+UseParallelGC"
-          - "-XX:+UseConcMarkSweepGC"
+        jvm_flag: [
+        "-XX:+UseG1GC",
+        "-XX:+UseStringDeduplication",
+        "-Xms512m",
+        "-XX:+UnlockDiagnosticVMOptions",
+        "-XX:+UseAdaptiveSizePolicy"
+        ]
       fail-fast: false
+
+    name: Test on JDK ${{ matrix.java }} with JVM Flag ${{ matrix.jvm_flag }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Set up Java ${{ matrix.java }}
-        uses: actions/setup-java@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v4
         with:
           java-version: ${{ matrix.java }}
+          distribution: 'zulu'
+          cache: 'maven'
 
-      - name: Cache dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2/repository
-          key: maven-${{ matrix.java }}-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            maven-${{ matrix.java }}-
+      - name: Log JVM Flag
+        run: | 
+          echo "Running with JVM flag: ${{ matrix.jvm_flag }}"
 
-      - name: Set JVM Flag
-        run: echo "JAVA_TOOL_OPTIONS=${{ matrix.jvm_flag }}" >> $GITHUB_ENV
+      - name: Maven Build with JVM Flag
+        env:
+          MAVEN_OPTS: ${{ matrix.jvm_flag }}
+        run: mvn clean verify -B
 
-      - name: Build and run tests
-        run: mvn clean test
+      - name: Run Tests with Coverage
+        env:
+          MAVEN_OPTS: ${{ matrix.jvm_flag }}
+        run: mvn test jacoco:report -B
 
-      - name: Generate code coverage report
+      - name: Collect Jacoco Coverage
+        if: success()
         run: |
-          mvn jacoco:report
-        continue-on-error: true
+          mkdir -p target/jacoco-reports/${{ matrix.java }}/${{ matrix.jvm_flag }}
+          cp target/site/jacoco/jacoco.csv target/jacoco-reports/${{ matrix.java }}/${{ matrix.jvm_flag }}/jacoco.csv
 
-      - name: Upload Jacoco Coverage Results
-        if: always()
-        uses: actions/upload-artifact@v2
+      - name: Upload Coverage Report
+        if: success()
+        uses: actions/upload-artifact@v3
         with:
-          name: jacoco-coverage-${{ matrix.java }}-${{ matrix.jvm_flag }}
-          path: target/site/jacoco/jacoco.csv
+          name: coverage-reports
+          path: target/jacoco-reports/
